@@ -65,9 +65,9 @@ const Sint32 PLD_DEFAULT_MENU_BUTTONS[PLD_MENU_INPUT_COUNT] = {
     PLD_BUTTON_NORTH,
     PLD_BUTTON_WEST,
     PLD_BUTTON_SOUTH,
+    PLD_BUTTON_EAST,
     PLD_BUTTON_LEFT_SHOULDER,
     PLD_BUTTON_RIGHT_SHOULDER,
-    PLD_BUTTON_EAST,
     PLD_BUTTON_BACK,
     PLD_BUTTON_START
 };
@@ -75,6 +75,20 @@ const Sint32 PLD_DEFAULT_MENU_BUTTONS[PLD_MENU_INPUT_COUNT] = {
 const Sint32 PLD_DEFAULT_TRIGGER_DEADZONE = 26000;
 const Sint32 PLD_DEFAULT_JOYSTICK_DEADZONE = 26000;
 
+const PLD_TouchButton PLD_DEFAULT_TOUCH_BUTTONS[PLD_MENU_INPUT_COUNT] = {
+    {{0.0f, 0.0f, 10.0f, 10.0f}, PLD_BUTTON_DPAD_UP},
+    {{10.0f, 0.0f, 10.0f, 10.0f}, PLD_BUTTON_DPAD_LEFT},
+    {{20.0f, 0.0f, 10.0f, 10.0f}, PLD_BUTTON_DPAD_DOWN},
+    {{30.0f, 0.0f, 10.0f, 10.0f}, PLD_BUTTON_DPAD_RIGHT},
+    {{40.0f, 0.0f, 10.0f, 10.0f}, PLD_BUTTON_NORTH},
+    {{50.0f, 0.0f, 10.0f, 10.0f}, PLD_BUTTON_WEST},
+    {{60.0f, 0.0f, 10.0f, 10.0f}, PLD_BUTTON_SOUTH},
+    {{70.0f, 0.0f, 10.0f, 10.0f}, PLD_BUTTON_EAST},
+    {{80.0f, 0.0f, 10.0f, 10.0f}, PLD_BUTTON_LEFT_SHOULDER},
+    {{90.0f, 0.0f, 10.0f, 10.0f}, PLD_BUTTON_RIGHT_SHOULDER},
+    {{100.0f, 0.0f, 10.0f, 10.0f}, PLD_BUTTON_BACK},
+    {{110.0f, 0.0f, 10.0f, 10.0f}, PLD_BUTTON_START}
+};
 
 SDL_IOStream* log_file = NULL;
 
@@ -174,6 +188,8 @@ void PLD_DestroyConfig(PLD_Config* config)
             }
         }
 
+        if (config->touch_buttons) { PLD_DestroyArrayList(config->touch_buttons, SDL_free); }
+
         SDL_free(config);
     }
 }
@@ -216,6 +232,15 @@ PLD_Config* PLD_CreateDefaultConfig()
 
     config->trigger_deadzone = PLD_DEFAULT_TRIGGER_DEADZONE;
     config->joystick_deadzone = PLD_DEFAULT_JOYSTICK_DEADZONE;
+
+    config->touch_buttons = PLD_CreateArrayList();
+    for (int i = 0; i < PLD_MENU_INPUT_COUNT; i++)
+    {
+        PLD_TouchButton* touch_button = SDL_malloc(sizeof(PLD_TouchButton));
+        touch_button->rect = PLD_DEFAULT_TOUCH_BUTTONS[i].rect;
+        touch_button->button = PLD_DEFAULT_TOUCH_BUTTONS[i].button;
+        PLD_ArrayListAdd(config->touch_buttons, touch_button);
+    }
 
     return config;
 }
@@ -294,6 +319,20 @@ bool PLD_ReadConfig(PLD_Context* context)
 
     PLD_READ_CHECK(config_file, &context->config->trigger_deadzone, sizeof(Sint32));
     PLD_READ_CHECK(config_file, &context->config->joystick_deadzone, sizeof(Sint32));
+
+    context->config->touch_buttons = PLD_CreateArrayList();
+    Sint32 flag = !PLD_CONFIG_STOP_FLAG;
+    while (flag != PLD_CONFIG_STOP_FLAG)
+    {
+        PLD_READ_CHECK(config_file, &flag, sizeof(Sint32));
+        if (flag != PLD_CONFIG_STOP_FLAG)
+        {
+            PLD_TouchButton* touch_button = SDL_malloc(sizeof(PLD_TouchButton));
+            touch_button->button = flag;
+            PLD_READ_CHECK(config_file, &touch_button->rect, sizeof(float) * 4);
+            PLD_ArrayListAdd(context->config->touch_buttons, touch_button);
+        }
+    }
 
     SDL_CloseIO(config_file);
     SDL_free(config_path);
@@ -444,6 +483,14 @@ bool PLD_WriteConfig(PLD_Context* context)
 
     PLD_WRITE_CHECK(config_file, &context->config->trigger_deadzone, sizeof(Sint32));
     PLD_WRITE_CHECK(config_file, &context->config->joystick_deadzone, sizeof(Sint32));
+
+    for (int i = 0; i < context->config->touch_buttons->len; i++)
+    {
+        PLD_TouchButton* touch_button = context->config->touch_buttons->data[i];
+        PLD_WRITE_CHECK(config_file, &touch_button->button, sizeof(Sint32));
+        PLD_WRITE_CHECK(config_file, &touch_button->rect, sizeof(float) * 4);
+    }
+    PLD_WRITE_CHECK(config_file, &stop_flag, sizeof(Sint32));
 
     SDL_CloseIO(config_file);
     SDL_free(config_path);

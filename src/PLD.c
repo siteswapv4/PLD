@@ -88,6 +88,51 @@ void PLD_ReturnToSongMenu(PLD_AppState* app_state)
     PLD_SetMusicPosition(app_state->song_menu->music, app_state->song_menu->dataIni->thumbTimeStart);
 }
 
+typedef struct PLD_HeldTouch
+{
+    SDL_MouseID id;
+    PLD_Button button;
+}PLD_HeldTouch;
+static PLD_ArrayList* PLD_held_touches = NULL;
+void PLD_TouchEvent(PLD_Context* context, SDL_Event* event)
+{
+    if (!PLD_held_touches) { PLD_held_touches = PLD_CreateArrayList(); }
+    if ((event->type == SDL_EVENT_MOUSE_BUTTON_DOWN) && (event->button.button == SDL_BUTTON_LEFT))
+    {
+        for (int i = 0; i < context->config->touch_buttons->len; i++)
+        {
+            PLD_TouchButton* touch_button = context->config->touch_buttons->data[i];
+            SDL_FPoint mouse_position = {event->button.x, event->button.y};
+            if (SDL_PointInRectFloat(&mouse_position, &touch_button->rect))
+            {
+                PLD_HeldTouch* held_touch = SDL_malloc(sizeof(PLD_HeldTouch));
+                held_touch->id = event->button.which;
+                held_touch->button = touch_button->button;
+                PLD_ArrayListAdd(PLD_held_touches, held_touch);
+
+                SDL_Event event = {0};
+                event.type = SDL_EVENT_GAMEPAD_BUTTON_DOWN;
+                event.gbutton.button = touch_button->button;
+                SDL_PushEvent(&event);
+            }
+        }
+    }
+    else if ((event->type == SDL_EVENT_MOUSE_BUTTON_UP) && (event->button.button == SDL_BUTTON_LEFT))
+    {
+        for (int i = PLD_held_touches->len - 1; i >= 0; i--)
+        {
+            PLD_HeldTouch* held_touch = PLD_held_touches->data[i];
+            if (held_touch->id == event->button.which)
+            {
+                SDL_Event event = {0};
+                event.type = SDL_EVENT_GAMEPAD_BUTTON_UP;
+                event.gbutton.button = held_touch->button;
+                SDL_PushEvent(&event);
+                SDL_free(PLD_ArrayListRemoveAt(PLD_held_touches, i));
+            }
+        }
+    }
+}
 
 SDL_AppResult SDL_AppEvent(void* user_data, SDL_Event* event)
 {
@@ -103,6 +148,7 @@ SDL_AppResult SDL_AppEvent(void* user_data, SDL_Event* event)
     }
     else
     {
+        if ((event->type == SDL_EVENT_MOUSE_BUTTON_DOWN) || (event->type == SDL_EVENT_MOUSE_BUTTON_UP)) { PLD_TouchEvent(app_state->context, event); }
         switch (app_state->state)
         {
             case PLD_STATE_SONG_MENU:
@@ -147,6 +193,14 @@ SDL_AppResult SDL_AppEvent(void* user_data, SDL_Event* event)
     return SDL_APP_CONTINUE;
 }
 
+void PLD_RenderTouch(PLD_Context* context)
+{
+    for (int i = 0; i < context->config->touch_buttons->len; i++)
+    {
+        SDL_SetRenderDrawColor(context->renderer, 0, 0, 0, 100);
+        SDL_RenderFillRect(context->renderer, &((PLD_TouchButton*)context->config->touch_buttons->data[i])->rect);
+    }
+}
 
 SDL_AppResult SDL_AppIterate(void* user_data)
 {
@@ -183,6 +237,7 @@ SDL_AppResult SDL_AppIterate(void* user_data)
             break;
     }
 
+    PLD_RenderTouch(app_state->context);
     PLD_PresentWindow(app_state->context);
 
     return SDL_APP_CONTINUE;
