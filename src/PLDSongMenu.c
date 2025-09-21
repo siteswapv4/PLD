@@ -49,8 +49,8 @@ int PLD_LoadSongMedia(PLD_Context* context, PLD_SongMenu* menu)
 {
     for (int i = 0; i < menu->directory_content->len; i++)
     {
-    	if ((PLD_EndsWith((char*)menu->directory_content->data[i], ".mp3")) || (PLD_EndsWith((char*)menu->directory_content->data[i], ".wav")) || (PLD_EndsWith((char*)menu->directory_content->data[i], ".ogg")) || (PLD_EndsWith((char*)menu->directory_content->data[i], ".opus")))
-    	{
+        if (PLD_IsSupportedAudio((char*)menu->directory_content->data[i]))
+        {
     		menu->music = PLD_LoadMusic(context, (char*)menu->directory_content->data[i]);
     		break;
     	}
@@ -58,7 +58,7 @@ int PLD_LoadSongMedia(PLD_Context* context, PLD_SongMenu* menu)
     
     for (int i = 0; i < menu->directory_content->len; i++)
     {
-    	if ((PLD_EndsWith((char*)menu->directory_content->data[i], ".mpeg")) || (PLD_EndsWith((char*)menu->directory_content->data[i], ".mp4")) || (PLD_EndsWith((char*)menu->directory_content->data[i], ".webm")) || (PLD_EndsWith((char*)menu->directory_content->data[i], ".mkv")))
+    	if (PLD_IsSupportedVideo((char*)menu->directory_content->data[i]))
     	{
     		menu->video = PLD_LoadVideo(context, (char*)menu->directory_content->data[i], menu->dataIni->thumbTimeStart);
     		break;
@@ -67,8 +67,7 @@ int PLD_LoadSongMedia(PLD_Context* context, PLD_SongMenu* menu)
     
     for (int i = 0; i < menu->directory_content->len; i++)
     {
-        if ((PLD_EndsWith((char*)menu->directory_content->data[i], ".jpg")) || (PLD_EndsWith((char*)menu->directory_content->data[i], ".png")) || (PLD_EndsWith((char*)menu->directory_content->data[i], ".webp")))
-        {
+        if (PLD_IsSupportedImage((char*)menu->directory_content->data[i]))        {
             menu->backgroundPath = SDL_strdup((char*)menu->directory_content->data[i]);
             if (!menu->video)
             {

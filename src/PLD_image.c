@@ -1,4 +1,5 @@
 #include <PLD_image.h>
+#include "PLDUtils.h"
 
 #define PLD_IMAGE_EXTENSION ".png"
 #define PLD_IMAGE_DIRECTORY "images/"
@@ -89,6 +90,15 @@ void PLD_GetImagesBounds(PLD_ImageCategory category, int* start, int* end)
     }
 }
 
+bool PLD_IsSupportedImage(const char* path)
+{
+    return (PLD_EndsWith(path, ".bmp")) ||
+           (PLD_EndsWith(path, ".gif")) ||
+           (PLD_EndsWith(path, ".jpg")) ||
+           (PLD_EndsWith(path, ".jpeg")) ||
+           (PLD_EndsWith(path, ".png")) ||
+           (PLD_EndsWith(path, ".webp"));
+}
 
 bool PLD_LoadImages(PLD_Context* context, PLD_ImageCategory category)
 {

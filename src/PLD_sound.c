@@ -9,6 +9,15 @@ static MIX_Track* PLD_sounds_tracks[PLD_SOUND_CHANNEL_COUNT] = {0};
 static SDL_PropertiesID PLD_sounds = 0;
 static PLD_Music* PLD_current_music = NULL;
 
+bool PLD_IsSupportedAudio(const char* path)
+{
+    return (PLD_EndsWith(path, ".mp3")) ||
+           (PLD_EndsWith(path, ".wav")) ||
+           (PLD_EndsWith(path, ".flac")) ||
+           (PLD_EndsWith(path, ".ogg")) ||
+           (PLD_EndsWith(path, ".opus"));
+}
+
 bool PLD_OpenAudio()
 {
 	if (PLD_mixer)

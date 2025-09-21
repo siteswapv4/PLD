@@ -1,4 +1,5 @@
 #include "PLDVideo.h"
+#include "PLDUtils.h"
 
 #define PL_MPEG_IMPLEMENTATION
 #include "pl_mpeg.h"
@@ -13,6 +14,10 @@ typedef struct PLD_Video
 	double currentTime;
 }PLD_Video;
 
+bool PLD_IsSupportedVideo(const char* path)
+{
+	return (PLD_EndsWith(path, ".mpeg")) || (PLD_EndsWith(path, ".mpg"));
+}
 
 int PLD_FreeVideo(PLD_Video* video)
 {
@@ -85,7 +90,7 @@ PLD_Image* PLD_GetVideoFrame(PLD_Video* video)
 			video->frame = plm_decode_video(video->plm);
 			if (video->frame)
 			{
-				SDL_UpdateYUVTexture(video->image->texture, NULL, video->frame->y.data, video->frame->y.width, video->frame->cr.data, video->frame->cr.width, video->frame->cb.data, video->frame->cb.width);
+				SDL_UpdateYUVTexture(video->image->texture, NULL, video->frame->y.data, video->frame->y.width, video->frame->cb.data, video->frame->cb.width, video->frame->cr.data, video->frame->cr.width);
 			}
 		}
 	}
