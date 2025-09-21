@@ -11,4 +11,5 @@ emcc src/*.c -o index.html \
   -sEXPORTED_RUNTIME_METHODS="["ccall"]" \
   -sEXPORTED_FUNCTIONS="["_free", "_main"]" \
   --embed-file ./data@data/ \
+  --shell-file ~/emsdk/upstream/emscripten/src/shell_minimal.html \
 && python3 -m http.server
