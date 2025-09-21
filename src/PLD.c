@@ -88,7 +88,8 @@ void PLD_ReturnToSongMenu(PLD_AppState* app_state)
     PLD_SetMusicPosition(app_state->song_menu->music, app_state->song_menu->dataIni->thumbTimeStart);
 }
 
-static bool PLD_show_touch = false;
+#define PLD_SHOW_TOUCH_DELAY 3000
+static Uint64 PLD_last_touch = 0;
 typedef struct PLD_HeldTouch
 {
     SDL_FingerID id;
@@ -97,7 +98,7 @@ typedef struct PLD_HeldTouch
 static PLD_ArrayList* PLD_held_touches = NULL;
 void PLD_TouchEvent(PLD_Context* context, SDL_Event* event)
 {
-    PLD_show_touch = true;
+    PLD_last_touch = SDL_GetTicks();
     if (!PLD_held_touches) { PLD_held_touches = PLD_CreateArrayList(); }
     if (event->type == SDL_EVENT_FINGER_DOWN)
     {
@@ -151,10 +152,6 @@ SDL_AppResult SDL_AppEvent(void* user_data, SDL_Event* event)
     else
     {
         if ((event->type == SDL_EVENT_FINGER_DOWN) || (event->type == SDL_EVENT_FINGER_UP)) { PLD_TouchEvent(app_state->context, event); }
-        if ((event->type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) ||
-            (event->type == SDL_EVENT_GAMEPAD_BUTTON_UP) ||
-            (event->type == SDL_EVENT_KEY_UP) ||
-            (event->type == SDL_EVENT_KEY_DOWN)) { PLD_show_touch = false; }
         switch (app_state->state)
         {
             case PLD_STATE_SONG_MENU:
@@ -201,7 +198,7 @@ SDL_AppResult SDL_AppEvent(void* user_data, SDL_Event* event)
 
 void PLD_RenderTouch(PLD_Context* context)
 {
-    if (PLD_show_touch)
+    if (SDL_GetTicks() - PLD_last_touch < PLD_SHOW_TOUCH_DELAY)
     {
         for (int i = 0; i < context->config->touch_buttons->len; i++)
         {
