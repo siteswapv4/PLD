@@ -88,6 +88,7 @@ typedef struct PLD_Image
     SDL_Texture* texture;
 }PLD_Image;
 
+bool PLD_IsSupportedImage(const char* path);
 
 bool PLD_LoadImages(PLD_Context* context, PLD_ImageCategory category);
 

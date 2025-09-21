@@ -24,6 +24,8 @@ typedef struct PLD_Music
     int sample_rate;
 }PLD_Music;
 
+bool PLD_IsSupportedAudio(const char* path);
+
 bool PLD_OpenAudio();
 
 bool PLD_LoadSounds(PLD_Context* context);

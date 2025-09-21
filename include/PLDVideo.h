@@ -7,6 +7,7 @@
 
 typedef struct PLD_Video PLD_Video;
 
+bool PLD_IsSupportedVideo(const char* path);
 
 int PLD_FreeVideo(PLD_Video* video);
 

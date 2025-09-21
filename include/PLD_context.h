@@ -84,6 +84,11 @@ typedef enum PLD_Button
     PLD_BUTTON_COUNT
 }PLD_Button;
 
+typedef struct PLD_TouchButton
+{
+    SDL_FRect rect;
+    PLD_Button button;
+}PLD_TouchButton;
 
 typedef struct PLD_Config
 {
@@ -102,6 +107,7 @@ typedef struct PLD_Config
     PLD_ArrayList* gameplay_buttons[PLD_GAMEPLAY_INPUT_COUNT];
     Sint32 menu_keys[PLD_MENU_INPUT_COUNT];
     Sint32 menu_buttons[PLD_MENU_INPUT_COUNT];
+    PLD_ArrayList* touch_buttons;
 
     Sint32 trigger_deadzone;
     Sint32 joystick_deadzone;
