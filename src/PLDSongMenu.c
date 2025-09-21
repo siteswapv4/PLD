@@ -334,6 +334,7 @@ int PLD_MenuKeyPress(PLD_Context* context, PLD_SongMenu* menu, SDL_Event* event)
                 }
 
             	PLD_StopMusic(menu->music);
+                context->config->autoplay = false;
                 menu->state = PLD_SONGMENU_STATE_CORE;
             }
             else if (menu->state == PLD_SONGMENU_STATE_SONG)
@@ -374,7 +375,18 @@ int PLD_MenuKeyPress(PLD_Context* context, PLD_SongMenu* menu, SDL_Event* event)
             break;
 
         case PLD_MENU_INPUT_NORTH:
-            if ((menu->dataIni != NULL) && (menu->music == NULL))
+            if (menu->state == PLD_SONGMENU_STATE_DIFFICULTY)
+            {
+                if (menu->music == NULL)
+                {
+                    PLD_LoadSongMedia(context, menu);
+                }
+
+            	PLD_StopMusic(menu->music);
+                context->config->autoplay = true;
+                menu->state = PLD_SONGMENU_STATE_CORE;
+            }
+            else if ((menu->dataIni != NULL) && (menu->music == NULL))
             {
                 PLD_LoadSongMedia(context, menu);
             }
