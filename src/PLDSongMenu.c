@@ -6,6 +6,9 @@ const char* PLD_DSC_DIFFICULTY_FILES[PLD_DIFFICULTY_MAX] = {"Easy.dsc", "Normal.
 
 const char* PLD_SONG_MENU_DIFFICULTY_STRING[PLD_DIFFICULTY_MAX] = {"EASY", "NORMAL", "HARD", "EXTREME", "EXEX", "BASE"};
 
+const char* PLD_SONG_MENU_INSTRUCTION_TEXT =
+"To play PLD you need a PPD song directory.\n"
+"Download charts from 'projectdxxx.me', unzip, place a music file and image inside, then give the parent directory to PLD.";
 
 int PLD_CompareString(const void* left, const void* right)
 {
@@ -293,6 +296,9 @@ PLD_SongMenu* PLD_LoadSongMenu(PLD_Context* context)
 
     PLD_LoadSongMenuDirectory(context, menu);
 
+    menu->instruction_popup = UI_CreatePopup(context->renderer, PLD_GetLogicalCenter(), PLD_LOGICAL_WIDTH * 0.5f, context->text_engine, context->font, PLD_SONG_MENU_INSTRUCTION_TEXT);
+    UI_OpenPopup(menu->instruction_popup, SDL_GetTicks());
+
     return menu; 
 }
 
@@ -312,7 +318,12 @@ int PLD_SongMenuKeyPress(PLD_Context* context, PLD_SongMenu* menu, SDL_Event* ev
 {
     if (menu->songNames->len == 0)
     {
-        if (PLD_GetMenuPressedInput(context, event) != PLD_MENU_INPUT_INVALID)
+        PLD_MenuInput input = PLD_GetMenuPressedInput(context, event);
+        if ((UI_GetPopupPhase(menu->instruction_popup) == UI_POPUP_OPENED) && (input == PLD_MENU_INPUT_EAST))
+        {
+            UI_ClosePopup(menu->instruction_popup, SDL_GetTicks());
+        }
+        else if ((UI_GetPopupPhase(menu->instruction_popup) == UI_POPUP_CLOSED) && (input != PLD_MENU_INPUT_INVALID))
         {
             void** data = SDL_malloc(2 * sizeof(void*));
             data[0] = context;
@@ -515,35 +526,8 @@ int PLD_RenderSongMenu(PLD_Context* context, PLD_SongMenu* menu)
     else
     {
         PLD_RenderText(context, menu->no_song_text, PLD_LOGICAL_WIDTH / 2.0f, PLD_LOGICAL_HEIGHT / 2.0f, PLD_LOGICAL_WIDTH, 255, true);
+        UI_RenderPopup(context->renderer, menu->instruction_popup, SDL_GetTicks());
     }
-
-    return PLD_SUCCESS;
-}
-
-int PLD_FreeMenu(PLD_SongMenu* menu)
-{
-    for (int i = 0; i < PLD_SONG_LIST_MAX; i++)
-    {
-        if (menu->texts[i] != NULL)
-        {
-            PLD_DestroyText(menu->texts[i]);
-        }
-    }    
-
-    if (menu->currentSongPath != NULL)
-    {
-        SDL_free(menu->currentSongPath);
-    }
-
-    if (menu->current_directory != NULL)
-    {
-        SDL_free(menu->current_directory);
-    }
-
-    PLD_DestroyArrayList(menu->songNames, SDL_free);
-    PLD_DestroyImage(menu->background_image);
-
-    SDL_free(menu);
 
     return PLD_SUCCESS;
 }
@@ -593,6 +577,8 @@ void PLD_QuitSongMenu(PLD_Context* context, PLD_SongMenu* song_menu)
 
     PLD_DestroyText(song_menu->no_song_text);
     SDL_free(song_menu->song_directory);
+
+    UI_DestroyPopup(song_menu->instruction_popup);
 
     PLD_DestroyImages(PLD_IMAGE_CATEGORY_MENU);
     SDL_free(song_menu);

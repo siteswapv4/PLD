@@ -140,6 +140,7 @@ typedef struct
 	int bpm;
 }PLD_DataIni;
 
+SDL_FPoint PLD_GetLogicalCenter();
 
 PLD_Context* PLD_Init();
 

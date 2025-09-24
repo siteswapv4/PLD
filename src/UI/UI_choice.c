@@ -10,7 +10,7 @@
 
 static const char* UI_CHOICE_BOX_SVG =
 "<svg width='%d' height='%d'>"
-"<rect x='%d' y='%d' width='%d' height='%d' rx='%d' fill='black' fill-opacity='0.5' stroke='white' stroke-width='%d'/>"
+"<rect x='%d' y='%d' width='%d' height='%d' rx='%d' fill='black' fill-opacity='0.9' stroke='white' stroke-width='%d'/>"
 "</svg>";
 
 static const char* UI_CHOICE_OUTLINE_SVG =
@@ -118,6 +118,8 @@ UI_Choice* UI_CreateChoice(SDL_Renderer* renderer, SDL_FPoint position, int widt
     {
         int text_width, text_height;
         choice->texts[i] = TTF_CreateText(engine, font, choices[i], 0);
+        if (!choice->texts[i]) { goto error; }
+        TTF_SetTextColor(choice->texts[i], 255, 255, 255, 255);
         TTF_SetTextWrapWidth(choice->texts[i], width - UI_CHOICE_PADDING * 2.0f);
         TTF_GetTextSize(choice->texts[i], &text_width, &text_height);
         if (text_height > max_height) { max_height = text_height; }
@@ -232,7 +234,6 @@ bool UI_RenderChoice(SDL_Renderer* renderer, UI_Choice* choice, Uint64 time)
         SDL_RenderTexture(renderer, choice->background, NULL, &rect);
         int text_width, text_height;
         TTF_GetTextSize(choice->texts[i], &text_width, &text_height);
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         TTF_DrawRendererText(choice->texts[i], (int)(choice->box_rect.w / 2.0f - text_width / 2.0f), (int)(choice->box_rect.h / 2.0f - text_height / 2.0f));
     }
     SDL_SetRenderTarget(renderer, NULL);

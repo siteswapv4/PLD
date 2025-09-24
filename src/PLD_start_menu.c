@@ -23,10 +23,10 @@ PLD_StartMenu* PLD_LoadStartMenu(PLD_Context* context)
 {
     PLD_StartMenu* menu = SDL_calloc(1, sizeof(PLD_StartMenu));
 
-    menu->start_popup = UI_CreatePopup(context->renderer, (SDL_FPoint){PLD_LOGICAL_WIDTH / 2.0f, PLD_LOGICAL_HEIGHT / 2.0f}, PLD_LOGICAL_WIDTH * 0.7f, context->text_engine, context->font, PLD_START_TEXT);
+    menu->start_popup = UI_CreatePopup(context->renderer, PLD_GetLogicalCenter(), PLD_LOGICAL_WIDTH * 0.7f, context->text_engine, context->font, PLD_START_TEXT);
     UI_OpenPopup(menu->start_popup, SDL_GetTicks());
 
-    menu->choice = UI_CreateChoice(context->renderer, (SDL_FPoint){PLD_LOGICAL_WIDTH / 2.0f, PLD_LOGICAL_HEIGHT / 2.0f}, PLD_LOGICAL_WIDTH * 0.3f, context->text_engine, context->font, PLD_START_CHOICES, PLD_START_NUM_CHOICES);
+    menu->choice = UI_CreateChoice(context->renderer, PLD_GetLogicalCenter(), PLD_LOGICAL_WIDTH * 0.3f, context->text_engine, context->font, PLD_START_CHOICES, PLD_START_NUM_CHOICES);
     menu->selected = -1;
 
     return menu;

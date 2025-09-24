@@ -6,6 +6,7 @@
 #include "PLD_image.h"
 #include "PLDUtils.h"
 #include "PLDVideo.h"
+#include "UI/UI_popup.h"
 
 #include <PLD_context.h>
 
@@ -44,6 +45,8 @@ typedef struct PLD_SongMenu
     PLD_DataIni* dataIni;
     PLD_ArrayList* directory_content;
     char* song_directory;
+
+    UI_Popup* instruction_popup;
 }PLD_SongMenu;
 
 

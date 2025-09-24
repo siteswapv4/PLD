@@ -27,7 +27,7 @@ static const UI_AnimationState UI_POPUP_CONTINUE_ANIMATION_STATES[UI_POPUP_CONTI
 
 static const char* UI_POPUP_BACKGROUND_SVG =
 "<svg width='%d' height='%d'>"
-"<rect x='%d' y='%d' width='%d' height='%d' rx='10' ry='10' fill='black' fill-opacity='0.5' stroke-width='%d' stroke='rgb(255, 222, 33)'/>"
+"<rect x='%d' y='%d' width='%d' height='%d' rx='10' ry='10' fill='black' fill-opacity='0.9' stroke-width='%d' stroke='rgb(255, 222, 33)'/>"
 "</svg>";
 
 static const char* UI_POPUP_CONTINUE_SVG = 
@@ -95,6 +95,7 @@ UI_Popup* UI_CreatePopup(SDL_Renderer* renderer, SDL_FPoint position, int width,
     popup->text = TTF_CreateText(engine, font, text, 0);
     if (!popup->text) { goto error; }
 
+    TTF_SetTextColor(popup->text, 255, 255, 255, 255);
     TTF_SetTextWrapWidth(popup->text, width - UI_POPUP_MARGIN * 2);
     TTF_GetTextSize(popup->text, &text_width, &text_height);
     if (text_width % 2 != 0) { text_width--; }
@@ -178,7 +179,6 @@ bool UI_RenderPopup(SDL_Renderer* renderer, UI_Popup* popup, Uint64 time)
     SDL_RenderTexture(renderer, popup->background, NULL, NULL);
     int text_width, text_height;
     TTF_GetTextSize(popup->text, &text_width, &text_height);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     int draw_x = (int)(popup->rect.w / 2.0f - text_width / 2.0f);
     int draw_y = (int)(popup->rect.h / 2.0f - text_height / 2.0f);
     TTF_DrawRendererText(popup->text, draw_x, draw_y);

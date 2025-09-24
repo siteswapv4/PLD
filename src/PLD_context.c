@@ -540,6 +540,10 @@ bool PLD_ApplyConfig(PLD_Context* context)
     return success;
 }
 
+SDL_FPoint PLD_GetLogicalCenter()
+{
+    return (SDL_FPoint){PLD_LOGICAL_WIDTH / 2.0f, PLD_LOGICAL_HEIGHT / 2.0f};
+}
 
 void PLD_Quit(PLD_Context* context)
 {

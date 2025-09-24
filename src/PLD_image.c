@@ -255,6 +255,8 @@ bool PLD_RenderImage(PLD_Context* context, PLD_Image* image, SDL_FRect* src_rect
 bool PLD_RenderImageLetterbox(PLD_Context* context, PLD_Image* image)
 {
     SDL_FRect rect = {0};
+    SDL_SetRenderDrawColor(context->renderer, 0, 0, 0, 255);
+    SDL_RenderFillRect(context->renderer, NULL);
     
     float image_ratio = (float)image->width / image->height;
     float game_ratio = (float)PLD_LOGICAL_WIDTH / PLD_LOGICAL_HEIGHT;
