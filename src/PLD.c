@@ -2,6 +2,7 @@
 #include <SDL3/SDL_main.h>
 #include "PLD.h"
 #include "PLD_context.h"
+#include "PLD_start_menu.h"
 #include "PLDCore.h"
 #include "PLDControl.h"
 #include "PLD_image.h"
@@ -11,29 +12,27 @@
 #include "PLDPause.h"
 #include "PLDResult.h"
 
-
 typedef enum PLD_State
 {
     PLD_STATE_INVALID = -1,
+    PLD_STATE_START_MENU,
     PLD_STATE_SONG_MENU,
     PLD_STATE_GAMEPLAY,
     PLD_STATE_RESULT,
     PLD_STATE_COUNT
 }PLD_State;
 
-
 typedef struct PLD_AppState
 {
     PLD_Context* context;
+    PLD_StartMenu* start_menu;
     PLD_SongMenu* song_menu;
     PLD_Gameplay* gameplay;
     PLD_Result* result;
     PLD_State state;
 }PLD_AppState;
 
-
 const char* PLD_DIFFICULTY_STRING[] = {"Easy", "Normal", "Hard", "Extreme", "ExtraExtreme", "Base"};
-
 
 SDL_AppResult SDL_AppInit(void** user_data, int argc, char* argv[])
 {
@@ -62,20 +61,19 @@ SDL_AppResult SDL_AppInit(void** user_data, int argc, char* argv[])
         goto error;
     }
 
-    app_state->song_menu = PLD_LoadSongMenu(app_state->context);
-    if (app_state->song_menu == NULL)
+    app_state->start_menu = PLD_LoadStartMenu(app_state->context);
+    if (app_state->start_menu == NULL)
     {
         goto error;
     }
 
-    app_state->state = PLD_STATE_SONG_MENU;
+    app_state->state = PLD_STATE_START_MENU;
 
     return SDL_APP_CONTINUE;
 
 error:
     return SDL_APP_FAILURE;
 }
-
 
 void PLD_ReturnToSongMenu(PLD_AppState* app_state)
 {
@@ -90,6 +88,7 @@ void PLD_ReturnToSongMenu(PLD_AppState* app_state)
 
 #define PLD_SHOW_TOUCH_DELAY 3000
 static Uint64 PLD_last_touch = 0;
+static bool PLD_screen_touched = false;
 typedef struct PLD_HeldTouch
 {
     SDL_FingerID id;
@@ -98,6 +97,7 @@ typedef struct PLD_HeldTouch
 static PLD_ArrayList* PLD_held_touches = NULL;
 void PLD_TouchEvent(PLD_Context* context, SDL_Event* event)
 {
+    PLD_screen_touched = true;
     PLD_last_touch = SDL_GetTicks();
     if (!PLD_held_touches) { PLD_held_touches = PLD_CreateArrayList(); }
     if (event->type == SDL_EVENT_FINGER_DOWN)
@@ -137,6 +137,14 @@ void PLD_TouchEvent(PLD_Context* context, SDL_Event* event)
     }
 }
 
+void PLD_SwitchToSongMenu(PLD_AppState* app)
+{
+    PLD_QuitStartMenu(app->start_menu);
+    app->start_menu = NULL;
+    app->song_menu = PLD_LoadSongMenu(app->context);
+    app->state = PLD_STATE_SONG_MENU;
+}
+
 SDL_AppResult SDL_AppEvent(void* user_data, SDL_Event* event)
 {
     PLD_AppState* app_state = user_data;
@@ -154,8 +162,12 @@ SDL_AppResult SDL_AppEvent(void* user_data, SDL_Event* event)
         if ((event->type == SDL_EVENT_FINGER_DOWN) || (event->type == SDL_EVENT_FINGER_UP)) { PLD_TouchEvent(app_state->context, event); }
         switch (app_state->state)
         {
+            case PLD_STATE_START_MENU:
+                PLD_StartMenuKeyPress(app_state->context, app_state->start_menu, event);
+                break;
+
             case PLD_STATE_SONG_MENU:
-                PLD_MenuKeyPress(app_state->context, app_state->song_menu, event);
+                PLD_SongMenuKeyPress(app_state->context, app_state->song_menu, event);
                 break;
 
             case PLD_STATE_GAMEPLAY:
@@ -198,7 +210,7 @@ SDL_AppResult SDL_AppEvent(void* user_data, SDL_Event* event)
 
 void PLD_RenderTouch(PLD_Context* context)
 {
-    if (SDL_GetTicks() - PLD_last_touch < PLD_SHOW_TOUCH_DELAY)
+    if ((PLD_screen_touched) && (SDL_GetTicks() - PLD_last_touch < PLD_SHOW_TOUCH_DELAY))
     {
         for (int i = 0; i < context->config->touch_buttons->len; i++)
         {
@@ -216,6 +228,21 @@ SDL_AppResult SDL_AppIterate(void* user_data)
 
     switch (app_state->state)
     {
+        case PLD_STATE_START_MENU:
+            switch (PLD_StartMenuLoop(app_state->context, app_state->start_menu))
+            {
+                case PLD_START_MENU_NEXT:
+                    PLD_SwitchToSongMenu(app_state);
+                    break;
+
+                case PLD_START_MENU_PREVIOUS:
+                    return SDL_APP_SUCCESS;
+
+                default:
+                    break;
+            }
+            break;
+
         case PLD_STATE_SONG_MENU:
             PLD_SongMenuLoop(app_state->context, app_state->song_menu);
 
@@ -274,7 +301,9 @@ void SDL_AppQuit(void* user_data, SDL_AppResult result)
         PLD_QuitSongMenu(app_state->context, app_state->song_menu);
     }
 
-    PLD_CloseFont();
+    if (app_state->start_menu) { PLD_QuitStartMenu(app_state->start_menu); }
+
+    PLD_CloseFont(app_state->context);
     PLD_DestroySounds();
     PLD_DestroyEffects();
     

@@ -92,11 +92,11 @@ void PLD_RenderPauseMenu(PLD_Context* context, PLD_PauseMenu* pauseMenu)
     {
         if (pauseMenu->selected == i)
         {
-            PLD_SetTextColor(texts[i], 255, 0, 0);
+            PLD_SetTextColor(texts[i], (SDL_Color){255, 0, 0, 255});
         }
         else
         {
-            PLD_SetTextColor(texts[i], 255, 255, 255);
+            PLD_SetTextColor(texts[i], (SDL_Color){255, 255, 255, 255});
         }
     }
 

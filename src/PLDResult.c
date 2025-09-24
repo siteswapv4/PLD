@@ -21,11 +21,11 @@ PLD_Result* PLD_InitResult(PLD_Context* context, const char* backgroundPath, PLD
         result->background = PLD_LoadImage(context, backgroundPath);
     }
 
-    PLD_SetTextColor(result->coolText, 255, 255, 0);
-    PLD_SetTextColor(result->fineText, 100, 100, 255);
-    PLD_SetTextColor(result->safeText, 0, 128, 0);
-    PLD_SetTextColor(result->sadText, 25, 25, 255);
-    PLD_SetTextColor(result->worstText, 128, 0, 128);
+    PLD_SetTextColor(result->coolText, (SDL_Color){255, 255, 0, 255});
+    PLD_SetTextColor(result->fineText, (SDL_Color){100, 100, 255, 255});
+    PLD_SetTextColor(result->safeText, (SDL_Color){0, 128, 0, 255});
+    PLD_SetTextColor(result->sadText, (SDL_Color){25, 25, 255, 255});
+    PLD_SetTextColor(result->worstText, (SDL_Color){128, 0, 128, 255});
 
     result->start_time = SDL_GetTicks();
 

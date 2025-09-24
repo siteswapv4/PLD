@@ -119,6 +119,8 @@ typedef struct PLD_Context
     SDL_Renderer* renderer;
     SDL_Window* window;
     SDL_Gamepad* gamepad;
+    TTF_Font* font;
+    TTF_TextEngine* text_engine;
 
     char* data_path;
 

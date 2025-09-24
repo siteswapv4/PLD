@@ -286,6 +286,7 @@ PLD_SongMenu* PLD_LoadSongMenu(PLD_Context* context)
     	menu->difficultiesText[i] = PLD_CreateText(context, PLD_SONG_MENU_DIFFICULTY_STRING[i]);
     }
     menu->no_song_text = PLD_CreateText(context, "Press a key to add song folder");
+    PLD_SetTextColor(menu->no_song_text, (SDL_Color){0, 0, 0, 255});
 
     menu->current_directory = SDL_strdup("");
     SDL_asprintf(&menu->song_directory, "%s/songs/", context->data_path);
@@ -307,7 +308,7 @@ void PLD_FolderCallback(void* userdata, const char* directory)
     SDL_free(userdata);
 }
 
-int PLD_MenuKeyPress(PLD_Context* context, PLD_SongMenu* menu, SDL_Event* event)
+int PLD_SongMenuKeyPress(PLD_Context* context, PLD_SongMenu* menu, SDL_Event* event)
 {
     if (menu->songNames->len == 0)
     {
@@ -495,15 +496,15 @@ int PLD_RenderSongMenu(PLD_Context* context, PLD_SongMenu* menu)
             {
                 if (!menu->difficulties[i])
                 {
-                    PLD_SetTextColor(menu->difficultiesText[i], 150, 150, 150);
+                    PLD_SetTextColor(menu->difficultiesText[i], (SDL_Color){150, 150, 150, 255});
                 }
                 else if (i == menu->currentDifficulty)
                 {
-                    PLD_SetTextColor(menu->difficultiesText[i], 255, 0, 0);
+                    PLD_SetTextColor(menu->difficultiesText[i], (SDL_Color){255, 0, 0, 255});
                 }
                 else
                 {
-                    PLD_SetTextColor(menu->difficultiesText[i], 255, 255, 255);
+                    PLD_SetTextColor(menu->difficultiesText[i], (SDL_Color){255, 255, 255, 255});
                 }
                 PLD_RenderText(context, menu->difficultiesText[i], position_x, position_y, PLD_LOGICAL_WIDTH, 255, true);
                 

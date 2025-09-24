@@ -6,21 +6,16 @@
 
 #define PLD_FONT_SIZE 60
 
-
-typedef struct PLD_Text
-{
-    SDL_Texture* texture;
-}PLD_Text;
-
+typedef struct PLD_Text PLD_Text;
 
 bool PLD_OpenFont(PLD_Context* context);
 
 PLD_Text* PLD_CreateText(PLD_Context* context, const char* text);
 
-bool PLD_SetTextColor(PLD_Text* text, Uint8 r, Uint8 g, Uint8 b);
+bool PLD_SetTextColor(PLD_Text* text, SDL_Color color);
 
 bool PLD_RenderText(PLD_Context* context, PLD_Text* text, int posx, int posy, int max_width, int alpha, bool center);
 
 void PLD_DestroyText(PLD_Text* text);
 
-void PLD_CloseFont();
+void PLD_CloseFont(PLD_Context* context);

@@ -599,7 +599,9 @@ error:
 bool PLD_ClearWindow(PLD_Context* context)
 {
     SDL_SetRenderDrawColor(context->renderer, 0, 0, 0, 255);
-    return SDL_RenderClear(context->renderer);
+    SDL_RenderClear(context->renderer);
+    SDL_SetRenderDrawColor(context->renderer, 255, 255, 255, 255);
+    return SDL_RenderFillRect(context->renderer, NULL);
 }
 
 bool PLD_PresentWindow(PLD_Context* context)

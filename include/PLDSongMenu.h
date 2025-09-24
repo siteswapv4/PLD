@@ -47,7 +47,7 @@ typedef struct PLD_SongMenu
 }PLD_SongMenu;
 
 
-int PLD_MenuKeyPress(PLD_Context* context, PLD_SongMenu* menu, SDL_Event* event);
+int PLD_SongMenuKeyPress(PLD_Context* context, PLD_SongMenu* menu, SDL_Event* event);
 
 PLD_SongMenu* PLD_LoadSongMenu(PLD_Context* context);
 
