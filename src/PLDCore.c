@@ -321,7 +321,10 @@ void PLD_RenderGame(PLD_Context* context, PLD_Song* songInfo, PLD_Video* video, 
 
             PLD_CalculateButtonPos(((PLD_Note*)songInfo->notes->data[tempIndex]), coeff);
 
-            PLD_RenderTarget(context, note, coeff);
+            if (note->connect != NULL)
+            {
+                PLD_RenderConnect(context, note);
+            }
         }
         
         tempIndex++;
@@ -332,12 +335,13 @@ void PLD_RenderGame(PLD_Context* context, PLD_Song* songInfo, PLD_Video* video, 
     while ((tempIndex < songInfo->notes->len) && (PLD_GetNote(songInfo->notes, tempIndex)->time - PLD_GetNote(songInfo->notes, tempIndex)->flyingTime <= time))
     {
         PLD_Note* note = PLD_GetNote(songInfo->notes, tempIndex);
-
-        if ((note->active) && (note->connect != NULL))
-        {
-            PLD_RenderConnect(context, note);
-        }
         
+        if (note->active)
+        {
+            coeff = ((float)note->time - (float)time) / (float)note->flyingTime;
+            PLD_RenderTarget(context, note, coeff);
+        }
+
         tempIndex++;
     }
 
