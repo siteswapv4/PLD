@@ -1,4 +1,5 @@
 #include <PLD_context.h>
+#include "PLD_sound.h"
 
 #define PLD_CONFIG_NAME "PLD.config"
 #define PLD_LOG_NAME "PLD.log"
@@ -520,9 +521,16 @@ bool PLD_ApplyConfig(PLD_Context* context)
 
     char* fps;
     SDL_asprintf(&fps, "%d", context->config->fps);
-#ifndef SDL_PLATFORM_EMSCRIPTEN
-    SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, fps);
-#endif
+//#ifndef SDL_PLATFORM_EMSCRIPTEN
+    if (!context->config->vsync)
+    {
+        SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, fps);
+    }
+    else
+    {
+        SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "0");
+    }
+//#endif
     SDL_free(fps);
 
     if (!SDL_SetWindowFullscreen(context->window, context->config->fullscreen))
@@ -536,6 +544,9 @@ bool PLD_ApplyConfig(PLD_Context* context)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", SDL_GetError());
         success = false;
     }
+
+    PLD_SetSoundEffectVolume(context->config->sound_effect_volume);
+    PLD_SetMusicVolume(context->config->music_volume);
 
     return success;
 }

@@ -288,7 +288,7 @@ PLD_SongMenu* PLD_LoadSongMenu(PLD_Context* context)
     {
     	menu->difficultiesText[i] = PLD_CreateText(context, PLD_SONG_MENU_DIFFICULTY_STRING[i]);
     }
-    menu->no_song_text = PLD_CreateText(context, "Press a key to add song folder");
+    menu->no_song_text = PLD_CreateText(context, "Press circle to add song folder");
     PLD_SetTextColor(menu->no_song_text, (SDL_Color){0, 0, 0, 255});
 
     menu->current_directory = SDL_strdup("");
@@ -314,7 +314,7 @@ void PLD_FolderCallback(void* userdata, const char* directory)
     SDL_free(userdata);
 }
 
-int PLD_SongMenuKeyPress(PLD_Context* context, PLD_SongMenu* menu, SDL_Event* event)
+bool PLD_SongMenuKeyPress(PLD_Context* context, PLD_SongMenu* menu, SDL_Event* event)
 {
     if (menu->songNames->len == 0)
     {
@@ -323,15 +323,19 @@ int PLD_SongMenuKeyPress(PLD_Context* context, PLD_SongMenu* menu, SDL_Event* ev
         {
             UI_ClosePopup(menu->instruction_popup, SDL_GetTicks());
         }
-        else if ((UI_GetPopupPhase(menu->instruction_popup) == UI_POPUP_CLOSED) && (input != PLD_MENU_INPUT_INVALID))
+        else if ((UI_GetPopupPhase(menu->instruction_popup) == UI_POPUP_CLOSED) && (input == PLD_MENU_INPUT_EAST))
         {
             void** data = SDL_malloc(2 * sizeof(void*));
             data[0] = context;
             data[1] = menu;
             PLD_ShowDirectoryPicker(PLD_FolderCallback, data);
         }
+        else if (input == PLD_MENU_INPUT_SOUTH)
+        {
+            return false;
+        }
 
-        return PLD_SUCCESS;
+        return true;
     }
 
     switch (PLD_GetMenuPressedInput(context, event))
@@ -382,6 +386,10 @@ int PLD_SongMenuKeyPress(PLD_Context* context, PLD_SongMenu* menu, SDL_Event* ev
                 menu->current_directory[i+1] = '\0';
 
                 PLD_LoadSongMenuDirectory(context, menu);
+            }
+            else
+            {
+                return false;
             }
             break;
 
@@ -443,7 +451,7 @@ int PLD_SongMenuKeyPress(PLD_Context* context, PLD_SongMenu* menu, SDL_Event* ev
             break;
     }
 
-    return PLD_SUCCESS;
+    return true;
 }
 
 int PLD_RenderSongMenu(PLD_Context* context, PLD_SongMenu* menu)

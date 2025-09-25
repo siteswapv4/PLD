@@ -61,7 +61,7 @@ SDL_AppResult SDL_AppInit(void** user_data, int argc, char* argv[])
         goto error;
     }
 
-    app_state->start_menu = PLD_LoadStartMenu(app_state->context);
+    app_state->start_menu = PLD_LoadStartMenu(app_state->context, true);
     if (app_state->start_menu == NULL)
     {
         goto error;
@@ -141,7 +141,10 @@ void PLD_SwitchToSongMenu(PLD_AppState* app)
 {
     PLD_QuitStartMenu(app->start_menu);
     app->start_menu = NULL;
-    app->song_menu = PLD_LoadSongMenu(app->context);
+    if (!app->song_menu)
+    {
+        app->song_menu = PLD_LoadSongMenu(app->context);
+    }
     app->state = PLD_STATE_SONG_MENU;
 }
 
@@ -163,11 +166,26 @@ SDL_AppResult SDL_AppEvent(void* user_data, SDL_Event* event)
         switch (app_state->state)
         {
             case PLD_STATE_START_MENU:
-                PLD_StartMenuKeyPress(app_state->context, app_state->start_menu, event);
+                switch (PLD_StartMenuKeyPress(app_state->context, app_state->start_menu, event))
+                {
+                    case PLD_START_MENU_NEXT:
+                        PLD_SwitchToSongMenu(app_state);
+                        break;
+
+                    case PLD_START_MENU_PREVIOUS:
+                        return SDL_APP_SUCCESS;
+
+                    default:
+                        break;
+                }
                 break;
 
             case PLD_STATE_SONG_MENU:
-                PLD_SongMenuKeyPress(app_state->context, app_state->song_menu, event);
+                if (!PLD_SongMenuKeyPress(app_state->context, app_state->song_menu, event))
+                {
+                    app_state->start_menu = PLD_LoadStartMenu(app_state->context, false);
+                    app_state->state = PLD_STATE_START_MENU;
+                }
                 break;
 
             case PLD_STATE_GAMEPLAY:

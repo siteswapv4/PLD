@@ -12,7 +12,7 @@ typedef enum PLD_StartMenuResult
     PLD_START_MENU_NEXT
 }PLD_StartMenuResult;
 
-PLD_StartMenu* PLD_LoadStartMenu(PLD_Context* context);
+PLD_StartMenu* PLD_LoadStartMenu(PLD_Context* context, bool first);
 
 void PLD_QuitStartMenu(PLD_StartMenu* menu);
 

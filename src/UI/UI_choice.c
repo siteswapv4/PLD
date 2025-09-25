@@ -45,9 +45,16 @@ typedef struct UI_Choice
     UI_Animation* close_animation;
     UI_Animation* switch_up_animation;
     UI_Animation* switch_down_animation;
+    UI_Animation* switch_left_animation;
+    UI_Animation* switch_right_animation;
     int num_choices;
-    UI_ChoicePhase phase;
     int selected;
+    UI_ChoicePhase phase;
+    UI_ChoiceDirection direction;
+
+    TTF_Text*** options;
+    int* num_options;
+    int* selected_options;
 }UI_Choice;
 
 void UI_OpenChoiceCallback(void* userdata)
@@ -85,19 +92,32 @@ SDL_Texture* UI_GetBoxSVG(SDL_Renderer* renderer, const char* source, int width,
     return NULL;
 }
 
-UI_Animation* UI_GetSwitchAnimation(int height, bool up)
+UI_Animation* UI_GetSwitchAnimation(int width, int height, int direction)
 {
-    float end_position = height + UI_CHOICE_MARGIN * 2.0f;
+    float end_x = width + UI_CHOICE_MARGIN * 2.0f;
+    float end_y = height + UI_CHOICE_MARGIN * 2.0f;
 
-    const UI_AnimationState switch_states[2] = {
-        {0,   {0.0f, 0.0f},                              {1.0f, 1.0f}, 0.0f, {1.0f, 1.0f, 1.0f, 1.0f}},
-        {200, {0.0f, up ? -end_position : end_position}, {1.0f, 1.0f}, 0.0f, {1.0f, 1.0f, 1.0f, 1.0f}}
-    };
+    if ((direction == 0) || (direction == 1))
+    {
+        const UI_AnimationState switch_states[2] = {
+            {0,   {0.0f, 0.0f},                              {1.0f, 1.0f}, 0.0f, {1.0f, 1.0f, 1.0f, 1.0f}},
+            {200, {0.0f, direction == 0 ? -end_y : end_y}, {1.0f, 1.0f}, 0.0f, {1.0f, 1.0f, 1.0f, 1.0f}}
+        };
 
-    return UI_CreateAnimationFromStates(switch_states, 2);
+        return UI_CreateAnimationFromStates(switch_states, 2);
+    }
+    else
+    {
+        const UI_AnimationState switch_states[2] = {
+            {0,   {0.0f, 0.0f},                              {1.0f, 1.0f}, 0.0f, {1.0f, 1.0f, 1.0f, 1.0f}},
+            {200, {direction == 2 ? -end_x : end_x, 0.0f}, {1.0f, 1.0f}, 0.0f, {1.0f, 1.0f, 1.0f, 1.0f}}
+        };
+
+        return UI_CreateAnimationFromStates(switch_states, 2);
+    }
 }
 
-UI_Choice* UI_CreateChoice(SDL_Renderer* renderer, SDL_FPoint position, int width, TTF_TextEngine* engine, TTF_Font* font, const char* const* choices, int num_choices)
+UI_Choice* UI_CreateChoice(SDL_Renderer* renderer, SDL_FPoint position, int width, TTF_TextEngine* engine, TTF_Font* font, const char* const* choices, int num_choices, UI_ChoiceDirection direction)
 {
     if (!renderer) { SDL_Log("Failed to create choice : renderer NULL"); return NULL; }
     if (!engine) { SDL_Log("Failed to create choice : engine NULL"); return NULL; }
@@ -125,8 +145,18 @@ UI_Choice* UI_CreateChoice(SDL_Renderer* renderer, SDL_FPoint position, int widt
         if (text_height > max_height) { max_height = text_height; }
     }
 
-    choice->box_rect = (SDL_FRect){position.x - width / 2.0f, 0.0f, width, max_height + UI_CHOICE_PADDING * 2.0f};
-    choice->box_rect.y = position.y - (choice->box_rect.h * num_choices + UI_CHOICE_MARGIN * 2.0f * (num_choices - 1)) / 2.0f;
+    if (direction == UI_CHOICE_VERTICAL)
+    {
+        choice->box_rect = (SDL_FRect){position.x, 0.0f, width, max_height + UI_CHOICE_PADDING * 2.0f};
+        choice->box_rect.x -= choice->box_rect.w / 2.0f;
+        choice->box_rect.y = position.y - (choice->box_rect.h * num_choices + UI_CHOICE_MARGIN * 2.0f * (num_choices - 1)) / 2.0f;
+    }
+    else
+    {
+        choice->box_rect = (SDL_FRect){0.0f, position.y, width, max_height + UI_CHOICE_PADDING * 2.0f};
+        choice->box_rect.x = position.x - (choice->box_rect.w * num_choices + UI_CHOICE_MARGIN * 2.0f * (num_choices - 1)) / 2.0f;
+        choice->box_rect.y -= choice->box_rect.h / 2.0f;
+    }
     for (int i = 0; i < num_choices; i++)
     {
         choice->box_textures[i] = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, choice->box_rect.w, choice->box_rect.h);
@@ -142,10 +172,14 @@ UI_Choice* UI_CreateChoice(SDL_Renderer* renderer, SDL_FPoint position, int widt
     if (!choice->open_animation) { goto error; }
     choice->close_animation = UI_CreateAnimationFromStates(UI_CHOICE_CLOSE_ANIMATION_STATES, UI_CHOICE_CLOSE_ANIMATION_NUM_STATES);
     if (!choice->close_animation) { goto error; }
-    choice->switch_down_animation = UI_GetSwitchAnimation(choice->box_rect.h, false);
-    if (!choice->switch_down_animation) { goto error; }
-    choice->switch_up_animation = UI_GetSwitchAnimation(choice->box_rect.h, true);
+    choice->switch_up_animation = UI_GetSwitchAnimation(choice->box_rect.w, choice->box_rect.h, 0);
     if (!choice->switch_up_animation) { goto error; }
+    choice->switch_down_animation = UI_GetSwitchAnimation(choice->box_rect.w, choice->box_rect.h, 1);
+    if (!choice->switch_down_animation) { goto error; }
+    choice->switch_left_animation = UI_GetSwitchAnimation(choice->box_rect.w, choice->box_rect.h, 2);
+    if (!choice->switch_left_animation) { goto error; }
+    choice->switch_right_animation = UI_GetSwitchAnimation(choice->box_rect.w, choice->box_rect.h, 3);
+    if (!choice->switch_right_animation) { goto error; }
 
     choice->background = UI_GetBoxSVG(renderer, UI_CHOICE_BOX_SVG, choice->box_rect.w, choice->box_rect.h, UI_CHOICE_BOX_BORDER_SIZE);
     if (!choice->background) { goto error; }
@@ -154,6 +188,7 @@ UI_Choice* UI_CreateChoice(SDL_Renderer* renderer, SDL_FPoint position, int widt
 
     choice->phase = UI_CHOICE_CLOSED;
     choice->num_choices = num_choices;
+    choice->direction = direction;
 
     return choice;
 
@@ -178,10 +213,83 @@ void UI_DestroyChoice(UI_Choice* choice)
         if (choice->close_animation) { UI_DestroyAnimation(choice->close_animation); }
         if (choice->switch_up_animation) { UI_DestroyAnimation(choice->switch_up_animation); }
         if (choice->switch_down_animation) { UI_DestroyAnimation(choice->switch_down_animation); }
+        if (choice->switch_left_animation) { UI_DestroyAnimation(choice->switch_left_animation); }
+        if (choice->switch_right_animation) { UI_DestroyAnimation(choice->switch_right_animation); }
         if (choice->background) { SDL_DestroyTexture(choice->background); }
         if (choice->outline) { SDL_DestroyTexture(choice->outline); }
+        if (choice->options)
+        {
+            for (int i = 0; i < choice->num_choices; i++)
+            {
+                for (int j = 0; j < choice->num_options[i]; j++)
+                {
+                    if (choice->options[i][j]) { TTF_DestroyText(choice->options[i][j]); }
+                }
+                if (choice->options[i]) { SDL_free(choice->options[i]); }
+            }
+            SDL_free(choice->options);
+        }
+        if (choice->num_options) { SDL_free(choice->num_options); }
+        if (choice->selected_options) { SDL_free(choice->selected_options); }
         SDL_free(choice);
     }
+}
+
+bool UI_SetChoiceOptions(UI_Choice* choice, TTF_TextEngine* engine, TTF_Font* font, const char* const* const* options, const int* selected_options, const int* num_options)
+{
+    if (!choice) { SDL_Log("Failed to set choice options : choice NULL"); return false; }
+    if (!options) { SDL_Log("Failed to set choice options : options NULL"); return false; }
+    if (!num_options) { SDL_Log("Failed to set choice options : num_options NULL"); return false; }
+
+    choice->options = SDL_calloc(choice->num_choices, sizeof(TTF_Text**));
+    if (!choice->options) { goto error; }
+    for (int i = 0; i < choice->num_choices; i++)
+    {
+        choice->options[i] = SDL_calloc(num_options[i], sizeof(TTF_Text*));
+        if (!choice->options[i]) { goto error; }
+        for (int j = 0; j < num_options[i]; j++)
+        {
+            choice->options[i][j] = TTF_CreateText(engine, font, options[i][j], 0);
+            if (!choice->options[i][j]) { goto error; }
+            TTF_SetTextColor(choice->options[i][j], 255, 255, 255, 255);
+        }
+    }
+    choice->num_options = SDL_calloc(choice->num_choices, sizeof(int));
+    if (!choice->num_options) { goto error; }
+    SDL_memcpy(choice->num_options, num_options, choice->num_choices * sizeof(int));
+
+    choice->selected_options = SDL_calloc(choice->num_choices, sizeof(int));
+    if (!choice->selected_options) { goto error; }
+    SDL_memcpy(choice->selected_options, selected_options, choice->num_choices * sizeof(int));
+
+    return true;
+
+error:
+    SDL_Log("Failed to set choice options : %s", SDL_GetError());
+    if (choice) { UI_DestroyChoice(choice); }
+    return false;
+}
+
+SDL_FPoint UI_GetChoicePosition(UI_Choice* choice, int i, bool center)
+{
+    SDL_FPoint position = {choice->box_rect.x, choice->box_rect.y};
+
+    if (choice->direction == UI_CHOICE_VERTICAL)
+    {
+        position.y += i * (choice->box_rect.h + UI_CHOICE_MARGIN * 2.0f);
+    }
+    else
+    {
+        position.x += i * (choice->box_rect.w + UI_CHOICE_MARGIN * 2.0f);
+    }
+
+    if (center)
+    {
+        position.x += choice->box_rect.w / 2.0f;
+        position.y += choice->box_rect.h / 2.0f;
+    }
+
+    return position;
 }
 
 bool UI_OpenChoice(UI_Choice* choice, Uint64 time)
@@ -191,10 +299,7 @@ bool UI_OpenChoice(UI_Choice* choice, Uint64 time)
 
     for (int i = 0; i < choice->num_choices; i++)
     {
-        SDL_FPoint position = {choice->box_rect.x, choice->box_rect.y};
-        position.y += i * (choice->box_rect.h + UI_CHOICE_MARGIN * 2.0f);
-        position.x += choice->box_rect.w / 2.0f;
-        position.y += choice->box_rect.h / 2.0f;
+        SDL_FPoint position = UI_GetChoicePosition(choice, i, true);
         UI_PlayAnimationWithCallback(choice->box_queue, choice->open_animation, choice->box_textures[i], position, false, time, UI_OpenChoiceCallback, choice);
     }
 
@@ -211,10 +316,7 @@ bool UI_CloseChoice(UI_Choice* choice, Uint64 time)
 
     for (int i = 0; i < choice->num_choices; i++)
     {
-        SDL_FPoint position = {choice->box_rect.x, choice->box_rect.y};
-        position.y += i * (choice->box_rect.h + UI_CHOICE_MARGIN * 2.0f);
-        position.x += choice->box_rect.w / 2.0f;
-        position.y += choice->box_rect.h / 2.0f;
+        SDL_FPoint position = UI_GetChoicePosition(choice, i, true);
         UI_PlayAnimationWithCallback(choice->box_queue, choice->close_animation, choice->box_textures[i], position, false, time, UI_CloseChoiceCallback, choice);
     }
 
@@ -233,8 +335,19 @@ bool UI_RenderChoice(SDL_Renderer* renderer, UI_Choice* choice, Uint64 time)
         SDL_FRect rect = {0.0f, 0.0f, choice->background->w, choice->background->h};
         SDL_RenderTexture(renderer, choice->background, NULL, &rect);
         int text_width, text_height;
-        TTF_GetTextSize(choice->texts[i], &text_width, &text_height);
-        TTF_DrawRendererText(choice->texts[i], (int)(choice->box_rect.w / 2.0f - text_width / 2.0f), (int)(choice->box_rect.h / 2.0f - text_height / 2.0f));
+        if (choice->options)
+        {
+            TTF_GetTextSize(choice->texts[i], &text_width, &text_height);
+            TTF_DrawRendererText(choice->texts[i], (int)(UI_CHOICE_MARGIN * 5), (int)(choice->box_rect.h / 2.0f - text_height / 2.0f));
+
+            TTF_GetTextSize(choice->options[i][choice->selected_options[i]], &text_width, &text_height);
+            TTF_DrawRendererText(choice->options[i][choice->selected_options[i]], (int)(choice->box_rect.w - UI_CHOICE_MARGIN * 5 - text_width), (int)(choice->box_rect.h / 2.0f - text_height / 2.0f));
+        }
+        else
+        {
+            TTF_GetTextSize(choice->texts[i], &text_width, &text_height);
+            TTF_DrawRendererText(choice->texts[i], (int)(choice->box_rect.w / 2.0f - text_width / 2.0f), (int)(choice->box_rect.h / 2.0f - text_height / 2.0f));
+        }
     }
     SDL_SetRenderTarget(renderer, NULL);
 
@@ -244,7 +357,9 @@ bool UI_RenderChoice(SDL_Renderer* renderer, UI_Choice* choice, Uint64 time)
         for (int i = 0; i < choice->num_choices; i++)
         {
             SDL_FRect rect = choice->box_rect;
-            rect.y += i * (choice->box_rect.h + UI_CHOICE_MARGIN * 2.0f);
+            SDL_FPoint position = UI_GetChoicePosition(choice, i, false);
+            rect.x = position.x;
+            rect.y = position.y;
             SDL_RenderTexture(renderer, choice->box_textures[i], NULL, &rect);
             if ((choice->phase != UI_CHOICE_SWITCHING) && (i == choice->selected))
             {
@@ -279,20 +394,45 @@ bool UI_SetSelectedChoice(UI_Choice* choice, int index, Uint64 time)
     choice->selected = SDL_clamp(choice->selected, 0, choice->num_choices - 1);
 
     SDL_FPoint position = {choice->box_rect.x, choice->box_rect.y};
-    position.y += old_choice * (choice->box_rect.h + UI_CHOICE_MARGIN * 2.0f);
+    if (choice->direction == UI_CHOICE_VERTICAL)
+    {
+        position.y += old_choice * (choice->box_rect.h + UI_CHOICE_MARGIN * 2.0f);
+    }
+    else
+    {
+        position.x += old_choice * (choice->box_rect.w + UI_CHOICE_MARGIN * 2.0f);
+    }
     position.x += choice->box_rect.w / 2.0f;
     position.y += choice->box_rect.h / 2.0f;
 
     if (old_choice - choice->selected > 0)
     {
-        UI_PlayAnimationWithCallback(choice->effect_queue, choice->switch_up_animation, choice->outline, position, false, time, UI_SwitchChoiceCallback, choice);
+        UI_PlayAnimationWithCallback(choice->effect_queue, choice->direction == UI_CHOICE_VERTICAL ? choice->switch_up_animation : choice->switch_left_animation, choice->outline, position, false, time, UI_SwitchChoiceCallback, choice);
         choice->phase = UI_CHOICE_SWITCHING;
     }
     else if (old_choice - choice->selected < 0)
     {
-        UI_PlayAnimationWithCallback(choice->effect_queue, choice->switch_down_animation, choice->outline, position, false, time, UI_SwitchChoiceCallback, choice);
+        UI_PlayAnimationWithCallback(choice->effect_queue, choice->direction == UI_CHOICE_VERTICAL ? choice->switch_down_animation : choice->switch_right_animation, choice->outline, position, false, time, UI_SwitchChoiceCallback, choice);
         choice->phase = UI_CHOICE_SWITCHING;
     }
+
+    return true;
+}
+
+int UI_GetSelectedOption(UI_Choice* choice)
+{
+    if (!choice) { return -1; }
+    return choice->selected_options[choice->selected];
+}
+
+bool UI_SetSelectedOption(UI_Choice* choice, int index, Uint64 time)
+{
+    if (!choice) { SDL_Log("Failed to switch choice : choice NULL"); return false; }
+    if (choice->phase != UI_CHOICE_OPENED) { SDL_Log("Failed to switch choice : choice not opened"); return false; }
+
+    int old_option = choice->selected_options[choice->selected];
+    choice->selected_options[choice->selected] = index;
+    choice->selected_options[choice->selected] = SDL_clamp(choice->selected_options[choice->selected], 0, choice->num_options[choice->selected] - 1);
 
     return true;
 }
