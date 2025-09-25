@@ -86,7 +86,7 @@ void PLD_ReturnToSongMenu(PLD_AppState* app_state)
     PLD_SetMusicPosition(app_state->song_menu->music, app_state->song_menu->dataIni->thumbTimeStart);
 }
 
-#define PLD_SHOW_TOUCH_DELAY 3000
+#define PLD_SHOW_TOUCH_DELAY 10000
 static Uint64 PLD_last_touch = 0;
 static bool PLD_screen_touched = false;
 typedef struct PLD_HeldTouch

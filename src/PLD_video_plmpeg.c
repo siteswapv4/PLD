@@ -70,24 +70,21 @@ void PLD_CopyFrame(plm_frame_t* destination, const plm_frame_t* source)
 
 void PLD_DecodeFrame(PLD_Video* video, double time)
 {
-	if (!plm_has_ended(video->plm))
+	if ((video->frame == NULL) || (video->frame->time < time) || (SDL_fabs(video->frame->time - time) >= 1))
 	{
-		if ((video->frame == NULL) || (video->frame->time < time) || (SDL_fabs(video->frame->time - time) >= 1))
+		SDL_UnlockMutex(video->mutex);
+
+		if ((video->frame != NULL) && (SDL_abs(time - video->frame->time) >= 1))
 		{
-			SDL_UnlockMutex(video->mutex);
+			plm_seek(video->plm, time, false);
+		}
 
-			if ((video->frame != NULL) && (SDL_abs(time - video->frame->time) >= 1))
-			{
-				plm_seek(video->plm, time, false);
-			}
+		video->frame = plm_decode_video(video->plm);
+		SDL_LockMutex(video->mutex);
 
-			video->frame = plm_decode_video(video->plm);
-			SDL_LockMutex(video->mutex);
-
-			if ((video->thread) && (video->frame))
-			{
-				PLD_CopyFrame(video->frame_copy, video->frame);
-			}
+		if ((video->thread) && (video->frame))
+		{
+			PLD_CopyFrame(video->frame_copy, video->frame);
 		}
 	}
 }
