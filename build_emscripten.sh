@@ -2,9 +2,12 @@ source ~/emsdk/emsdk_env.sh
 
 emcc \
   src/PLD.c src/PLD_array_list.c src/PLD_context.c src/PLD_control.c src/PLD_core.c src/PLD_dsc.c src/PLD_effect.c src/PLD_evaluate.c src/PLD_hold.c src/PLD_image.c src/PLD_menu.c src/PLD_note.c src/PLD_pause.c src/PLD_ppd.c src/PLD_result.c src/PLD_song_menu.c src/PLD_sound.c src/PLD_start_menu.c src/PLD_text.c src/PLD_utils.c src/PLD_video_plmpeg.c \
-  UI/src/*.c -o index.html \
+  UI/src/*.c \
+  UDC/src/*.c \
+  -o index.html \
   -I "include" \
   -I "UI/include" \
+  -I "UDC/include" \
   -I "pl_mpeg/include" \
   -I ~/Documents/SDL3_emscripten/include/ \
   -L ~/Documents/SDL3_emscripten/lib/ \

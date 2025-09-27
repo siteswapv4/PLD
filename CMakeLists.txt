@@ -8,7 +8,7 @@ option(PLD_FFMPEG "Use ffmpeg instead of pl_mpeg" OFF)
 
 if(PLD_FFMPEG)
 	set(SRC_VIDEO src/PLD_video_ffmpeg.c)
-	set(VIDEO_LIBS avcodec avformat avutil)
+	set(VIDEO_LIBS "avcodec" "avformat" "avutil")
 else()
 	set(SRC_VIDEO src/PLD_video_plmpeg.c)
 	set(VIDEO_LIBS "")
@@ -21,6 +21,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 include_directories(
 	include
 	UI/include
+	UDC/include
 	pl_mpeg/include
 )
 
@@ -50,6 +51,13 @@ add_executable(${PROJECT_NAME}
 	UI/src/UI_choice.c
 	UI/src/UI_popup.c
 	UI/src/UI_utils.c
+
+	UDC/src/UDC_chart.c
+	UDC/src/UDC_dsc.c
+	UDC/src/UDC_note.c
+	UDC/src/UDC_phb.c
+	UDC/src/UDC_ppd.c
+
 	${SRC_VIDEO}
 )
 
