@@ -49,7 +49,6 @@ typedef struct PLD_SongMenu
     UI_Popup* instruction_popup;
 }PLD_SongMenu;
 
-
 bool PLD_SongMenuKeyPress(PLD_Context* context, PLD_SongMenu* menu, SDL_Event* event);
 
 PLD_SongMenu* PLD_LoadSongMenu(PLD_Context* context);
