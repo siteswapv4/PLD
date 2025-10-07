@@ -98,10 +98,9 @@ int PLD_PPDLoadEvents(SDL_IOStream* layerFile, PLD_PPDFilePosition filePosition,
     size_t ret;
 
     SDL_SeekIO(layerFile, filePosition.EVDStart, SDL_IO_SEEK_SET);
-    ret = SDL_ReadIO(layerFile, &c, sizeof(char));
-    SDL_SeekIO(layerFile, -1, SDL_IO_SEEK_CUR);
+    int end = filePosition.EVDStart + filePosition.EVDLen;
 
-    while (ret != 0)
+    while (SDL_TellIO(layerFile) < end)
     {
         PLD_PPDEvent* event = SDL_calloc(1, sizeof(PLD_PPDEvent));
         SDL_ReadIO(layerFile, &time, sizeof(float));
@@ -144,7 +143,7 @@ int PLD_PPDLoadEvents(SDL_IOStream* layerFile, PLD_PPDFilePosition filePosition,
                 break;
 
             case PLD_PPD_EVENT_CHANGEINITIALIZEORDER:
-                SDL_SeekIO(layerFile, 4, SDL_IO_SEEK_CUR);
+                SDL_SeekIO(layerFile, 10, SDL_IO_SEEK_CUR);
                 break;
 
             case PLD_PPD_EVENT_CHANGESLIDESCALE:
@@ -153,8 +152,6 @@ int PLD_PPDLoadEvents(SDL_IOStream* layerFile, PLD_PPDFilePosition filePosition,
         }
 
         PLD_ArrayListAdd(events, event);
-        ret = SDL_ReadIO(layerFile, &c, sizeof(char));
-        SDL_SeekIO(layerFile, -1, SDL_IO_SEEK_CUR);
     }
 
     return PLD_SUCCESS;
