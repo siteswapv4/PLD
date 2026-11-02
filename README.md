@@ -16,3 +16,7 @@ Currently the game supports the following platforms :
 ## Video demo
 
 https://www.youtube.com/watch?v=M_OBnN7DwZw
+
+## Web version
+
+https://siteswapv4.github.io/PLD
